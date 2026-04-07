@@ -38,7 +38,7 @@ class PerceptronModel(Module):
         super(PerceptronModel, self).__init__()
         
         "*** YOUR CODE HERE ***"
-        
+        self.w = Parameter(ones(1,dimensions))
 
     def get_weights(self):
         """
@@ -58,6 +58,7 @@ class PerceptronModel(Module):
         """
         "*** YOUR CODE HERE ***"
         
+        return tensordot(self.w.flatten(), x.flatten(), dims=1)
 
     def get_prediction(self, x):
         """
@@ -66,6 +67,11 @@ class PerceptronModel(Module):
         Returns: 1 or -1
         """
         "*** YOUR CODE HERE ***"
+        score = self.run(x)
+        if(score<0):
+            return -1
+        return 1
+
 
 
 
@@ -81,6 +87,21 @@ class PerceptronModel(Module):
         with no_grad():
             dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
             "*** YOUR CODE HERE ***"
+            while True:
+                mistakes = False
+                for batch in dataloader:
+                    x = batch['x']
+                    label = batch['label']
+                    currLabel = self.get_prediction(x)
+                    if label != currLabel:
+                        mistakes = True
+                        self.w.data += label * x
+                if not mistakes:
+                    break
+
+                    
+                
+
 
 
 
