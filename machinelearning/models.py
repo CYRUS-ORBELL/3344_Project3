@@ -115,6 +115,21 @@ class RegressionModel(Module):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         super().__init__()
+    
+        layerSize = 100
+        self.lr = .001
+        self.batchSize= 1
+        self.epochs = 1000
+       
+        #Hidden Layer 1 
+        self.W1 = Parameter(torch.randn(1,layerSize)*0.01)
+        self.b1 = Parameter(torch.zeros(layerSize))
+
+        #output Layer
+        self.W2 = Parameter(torch.randn(layerSize,1) * 0.1)
+        self.b2 = Parameter(torch.zeros(1))
+
+        
 
 
 
@@ -128,6 +143,13 @@ class RegressionModel(Module):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+        z1 = x @ self.W1 + self.b1 
+        a1 = relu(z1) 
+        z2 = a1 @ self.W2 + self.b2
+        return z2
+        
+
+       
 
     
     def get_loss(self, x, y):
@@ -141,7 +163,14 @@ class RegressionModel(Module):
         Returns: a tensor of size 1 containing the loss
         """
         "*** YOUR CODE HERE ***"
- 
+        prediction = self.forward(x)
+        error = y - prediction
+        squaredError = error * error 
+
+        loss = (1 / x.shape[0]) * squaredError.sum()
+        return loss
+        
+
         
 
     def train(self, dataset):
@@ -159,6 +188,27 @@ class RegressionModel(Module):
             
         """
         "*** YOUR CODE HERE ***"
+
+        dataloader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True)
+        optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        for epochs in range(self.epochs):
+            for batch in dataloader:
+                x = batch['x']
+                label = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x,label)
+                loss.backward()
+                optimizer.step()
+
+
+            
+
+
+
+
+
+
 
             
 
