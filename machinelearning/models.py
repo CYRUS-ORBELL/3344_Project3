@@ -250,16 +250,16 @@ class DigitClassificationModel(Module):
         layerSize = 250
         self.lr = .001
         self.batchSize= 784
-        self.epochs = 1000
+        self.epochs = 20
        
 
         #Hidden Layer 1 - turns a singular layer into size of the imput * size of the hidden layer (self.W1)
-        self.W1 = Parameter(torch.randn(1,layerSize)*0.01)
+        self.W1 = Parameter(torch.randn(input_size,layerSize)*0.01)
         self.b1 = Parameter(torch.zeros(layerSize))
         #b1 + b2 are biases
         
         #output Layer - transforms to singlular number
-        self.W2 = Parameter(torch.randn(layerSize,1) * 0.1)
+        self.W2 = Parameter(torch.randn(layerSize,output_size) * 0.1)
         self.b2 = Parameter(torch.zeros(10))
 
 
@@ -281,6 +281,11 @@ class DigitClassificationModel(Module):
                 (also called logits)
         """
         """ YOUR CODE HERE """
+        z1 = x @ self.W1 + self.b1 
+        a1 = relu(z1) 
+        z2 = a1 @ self.W2 + self.b2
+        return z2
+
 
  
 
@@ -298,7 +303,7 @@ class DigitClassificationModel(Module):
         Returns: a loss tensor
         """
         """ YOUR CODE HERE """
-        prediction = self.forward(x)
+        prediction = self.run(x)
         #error = y - prediction
         #squaredError = error * error 
 
@@ -316,6 +321,24 @@ class DigitClassificationModel(Module):
         Trains the model.
         """
         """ YOUR CODE HERE """
+        dataloader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True)
+        #changes value in W1 W2 b1 b
+        optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        
+        #loops
+        for epochs in range(self.epochs):
+            for batch in dataloader:
+                x = batch['x']
+                label = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x,label)
+                #stores the losses for every values
+                loss.backward()
+                #Changes based on losses 
+                optimizer.step()
+
+
 
 
 
