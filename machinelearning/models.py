@@ -428,6 +428,7 @@ class LanguageIDModel(Module):
 
         
 
+
 def Convolve(input: tensor, weight: tensor):
     """
     Acts as a convolution layer by applying a 2d convolution with the given inputs and weights.
@@ -445,6 +446,22 @@ def Convolve(input: tensor, weight: tensor):
     weight_dimensions = weight.shape
     Output_Tensor = tensor(())
     "*** YOUR CODE HERE ***"
+    input_h, input_w = input.shape
+    kernel_h, kernel_w = weight.shape
+
+    out_h = input_h - kernel_h + 1
+    out_w = input_w - kernel_w + 1
+
+
+    Output_Tensor = torch.zeros((out_h, out_w))
+
+    for i in range(out_h):
+        for j in range(out_w):
+            part = input[i:kernel_h+i, j:kernel_w+j]
+
+            Output_Tensor[i, j] = (part * weight).sum()
+
+
 
     
     "*** End Code ***"
@@ -472,6 +489,25 @@ class DigitConvolutionalModel(Module):
 
         self.convolution_weights = Parameter(ones((3, 3)))
         """ YOUR CODE HERE """
+        input_size = 28 * 28
+        output_size = 10
+        "*** YOUR CODE HERE ***"
+        
+        layerSize = 250
+        self.lr = .001
+        self.batchSize= 784
+        self.epochs = 20
+       
+
+        #Hidden Layer 1 - turns a singular layer into size of the imput * size of the hidden layer (self.W1)
+        self.W1 = Parameter(torch.randn(676,layerSize)*0.01)
+        self.b1 = Parameter(torch.zeros(layerSize))
+        #b1 + b2 are biases
+        
+        #output Layer - transforms to singlular number
+        self.W2 = Parameter(torch.randn(layerSize,output_size) * 0.1)
+        self.b2 = Parameter(torch.zeros(10))
+
 
 
 
@@ -488,6 +524,10 @@ class DigitConvolutionalModel(Module):
         x = stack(list(map(lambda sample: Convolve(sample, self.convolution_weights), x)))
         x = x.flatten(start_dim=1)
         """ YOUR CODE HERE """
+        z1 = x @ self.W1 + self.b1 
+        a1 = relu(z1) 
+        z2 = a1 @ self.W2 + self.b2
+        return z2
 
 
     def get_loss(self, x, y):
@@ -504,6 +544,12 @@ class DigitConvolutionalModel(Module):
         Returns: a loss tensor
         """
         """ YOUR CODE HERE """
+        prediction = self.run(x)
+        #error = y - prediction
+        #squaredError = error * error 
+
+        loss = torch.nn.functional.cross_entropy(prediction, y)
+        return loss
 
      
         
@@ -513,6 +559,25 @@ class DigitConvolutionalModel(Module):
         Trains the model.
         """
         """ YOUR CODE HERE """
+        dataloader = DataLoader(dataset, batch_size=self.batchSize, shuffle=True)
+        #changes value in W1 W2 b1 b
+        optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        
+        #loops
+        for epochs in range(self.epochs):
+            for batch in dataloader:
+                x = batch['x']
+                label = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x,label)
+                #stores the losses for every values
+                loss.backward()
+                #Changes based on losses 
+                optimizer.step()
+
+
+
 
 
 
