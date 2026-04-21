@@ -360,6 +360,20 @@ class LanguageIDModel(Module):
         super(LanguageIDModel, self).__init__()
         "*** YOUR CODE HERE ***"
 
+        self.hidden_size = 256
+        self.lr = 0.001
+        self.batch_size = 64
+        self.epochs = 20
+
+        self.Wx = Parameter(torch.randn(self.num_chars, self.hidden_size) * 0.01)
+        self.Whidden = Parameter(torch.randn(self.hidden_size, self.hidden_size) * 0.01)
+        self.b_hidden = Parameter(torch.zeros(self.hidden_size))
+
+        self.W_out1 = Parameter(torch.randn(self.hidden_size, 128) * 0.01)
+        self.b_out1 = Parameter(torch.zeros(128))
+        self.W_out2 = Parameter(torch.randn(128, 5) * 0.01)
+        self.b_out2 = Parameter(torch.zeros(5))
+
 
     def run(self, xs):
         """
@@ -392,6 +406,15 @@ class LanguageIDModel(Module):
         """
         "*** YOUR CODE HERE ***"
 
+        h = relu(xs[0] @ self.Wx + self.b_hidden)
+
+        for x in xs[1:]:
+            h = relu(x @ self.Wx + h @ self.Whidden + self.b_hidden)
+
+        out = relu(h @ self.W_out1 + self.b_out1)
+        out = out @ self.W_out2 + self.b_out2
+        return out
+
     
     def get_loss(self, xs, y):
         """
@@ -408,6 +431,8 @@ class LanguageIDModel(Module):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        logits = self.run(xs)
+        return cross_entropy(logits, y)
         
 
     def train(self, dataset):
@@ -425,6 +450,19 @@ class LanguageIDModel(Module):
         For more information, look at the pytorch documentation of torch.movedim()
         """
         "*** YOUR CODE HERE ***"
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        optimizer = optim.Adam(self.parameters(), lr=self.lr)
+
+        for epoch in range(self.epochs):
+            for batch in dataloader:
+                x = movedim(batch['x'], 0, 1)
+                xs = [x[i] for i in range(x.shape[0])]
+                y = batch['label']
+
+                optimizer.zero_grad()
+                loss = self.get_loss(xs, y)
+                loss.backward()
+                optimizer.step()
 
         
 
@@ -617,5 +655,3 @@ class Attention(Module):
         B, T, C = input.size()
 
         """YOUR CODE HERE"""
-
-     
